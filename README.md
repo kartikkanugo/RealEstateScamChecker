@@ -63,3 +63,7 @@ By leveraging blockchain technology, this system will address the complexities a
 - **Frontend**: Next.js
 - **Backend**: Rust (Axum framework)
 - **Blockchain**: Ethereum (Solidity)
+
+## Additional Resources
+
+- [Blockchain Contract Rules](docs/Contract_Rules.md)
