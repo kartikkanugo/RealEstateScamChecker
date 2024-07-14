@@ -1,57 +1,80 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.19;
 contract RealEstateScamChecker {
-    
-    struct Land {  // Details of a Land. I think it is better to rename it as Property ??
-        address land; // Address (ID) of the land/property
-        
-        address[] owners; // A land/apartment can have owner/(s). No. of owners is the size of this variable
-        
-        uint256[] idsOfShare; // A land/apartment if divided into more than one part/flats, then these parts are identified by their IDs
-        
-        bytes data; // Data from off-chain like land coordinates, location, etc
+
+    struct OwnerDetails {
+        uint256 id;
+        string name;
+        uint256 share;
     }
 
     struct Owner {
-        address owner;
-
+        uint256 noOfOwners;
+        // address owner; ??
+        // OwnerDetails[] ownerDetails;
     }
-    mapping (address => Land) landOwner;
+    mapping (uint256 => OwnerDetails) ownerDetails;
 
-    mapping (address => uint256) sharedIdOfOwner; // ID of a Share/flat for a given owner: assigning a land/apartment to owners as sub-lands/flats
+    enum LandType {
+        Plot,
+        SingleHouse,
+        Apartment
+    }
 
-    mapping (uint256 => bool) isShareRegistered; // checks if this share with its ID registered or not
+    struct LandCoordinates {
+        uint256 lattitude;
+        uint256 longitude;
+        uint256 area;
+        uint256 floor;
+        uint256 flatNo;
+        string localAddress;
+    }
 
-    // In case of a land, if divided into more than one owner, this variable gives the share of each owner with his property ID
-    mapping (address => mapping (uint256 => uint256)) percentageOfShare;
-
-    mapping (address => bool) authorities; // only real estate authorities have an authority to register/modify
-
-    Land[] public lands; // array of type Land to have a record of each land
-
-     /**
-     * Constructor
-     * @param _authorities deploy the contract and give access to the real estate authorities
-     */
-    constructor(address[] memory _authorities) public {
-        for(uint i = 0; i < _authorities.length; i++){
-                authorities[_authorities[i]] = true;
-        }
-        authorities[msg.sender] = true;
+    // Details of a Land
+    struct LandDetails {
+        LandCoordinates landCoordinates;
+        Owner owner;
+        LandType landtype;
     }
     
+    // mapping (address => bool) authorities; // only real estate authorities have an authority to register/modify
+
+    LandDetails[] lands; // array of type Land to have a record of each land
+
     /**
-     * Function to register a land/property and it is registerd only by a Real Estate Authority
-     * @param _land : the property/land to register
-     * @param _data : the calldata to this smart contract regarding this land from outside the chain
+     * Function to register a Property
+     * @param _lattitude lattitude
+     * @param _longitude longitude
+     * @param _area area
+     * @param _floor floor
+     * @param _flatNo flatNo
+     * @param _localAddress localAddress
+     * @param _noOfOwners noOfOwners
+     * @param _id id
+     * @param _name name
+     * @param _share share
+     * @param _landType landtype
      */
-    function registerAProperty(address _land, address _owner, uint256[] memory _idsOfShare, bytes memory _data) external {
-        require(authorities[msg.sender] == true);
-        Land memory land;
-        land.land = _land;
-        landOwner[_owner] = land;
-
+    function registerAProperty(uint256 _lattitude, uint256 _longitude, uint256 _area, uint256 _floor, 
+    uint256 _flatNo, string memory _localAddress, uint256 _noOfOwners, uint256[] calldata _id, string[] calldata _name, uint256[] calldata _share, uint256 _landType) external {
+        require(_landType <= 2, "Invalid PlotType");
+        LandDetails memory landDetails;
+        landDetails.landCoordinates.lattitude = _lattitude;
+        landDetails.landCoordinates.longitude = _longitude;
+        landDetails.landCoordinates.area = _area;
+        landDetails.landCoordinates.floor = _floor;
+        landDetails.landCoordinates.flatNo = _flatNo;
+        landDetails.landCoordinates.localAddress = _localAddress;
+        landDetails.owner.noOfOwners = _noOfOwners;
+        
+        for (uint256 i = 0; i < _noOfOwners; i++) {
+            ownerDetails[i].id = _id[i];
+            ownerDetails[i].name = _name[i];
+            ownerDetails[i].share = _share[i];
+        }
+    
+        landDetails.landtype = LandType(_landType);
+        lands.push(landDetails);
     }
     
-   
 }
